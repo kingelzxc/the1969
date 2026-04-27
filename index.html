@@ -1,0 +1,570 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>THE 1969 · VAULT DEFENDER</title>
+  <meta name="description" content="Defend the Vault. 1,969 testimonies hang in the balance. An arcade game inspired by The 1969 — Ethereum · Monochrome." />
+  <meta property="og:title" content="THE 1969 · VAULT DEFENDER" />
+  <meta property="og:description" content="Defend the Vault. 1,969 testimonies hang in the balance." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Cinzel:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #050504;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      font-family: 'Share Tech Mono', monospace;
+      color: #c8b86a;
+      overflow: hidden;
+    }
+
+    #site-header {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px 0;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: #3a3a28;
+    }
+    #site-header a {
+      color: #4a4a30;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    #site-header a:hover { color: #c8b86a; }
+
+    #hud {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: #0a0a08;
+      border: 1px solid #2a2a20;
+      border-bottom: none;
+      margin-top: 8px;
+    }
+    .hud-stat { font-size: 10px; color: #5a5a40; letter-spacing: 1px; }
+    .hud-val  { color: #c8b86a; font-size: 12px; font-weight: bold; }
+    .hud-center { font-size: 9px; color: #3a5a3a; letter-spacing: 2px; }
+
+    #game-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      max-width: 480px;
+      height: auto;
+      image-rendering: pixelated;
+      border: 1px solid #2a2a20;
+      cursor: none;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10,10,8,0.93);
+      z-index: 10;
+      gap: 10px;
+    }
+    .ov-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(18px, 5vw, 26px);
+      color: #c8b86a;
+      letter-spacing: 5px;
+      text-align: center;
+    }
+    .ov-sub {
+      font-size: clamp(8px, 2vw, 10px);
+      color: #4a4a30;
+      letter-spacing: 3px;
+      text-align: center;
+      line-height: 2;
+    }
+    .ov-btn {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(10px, 2.5vw, 12px);
+      color: #0a0a08;
+      background: #c8b86a;
+      border: none;
+      padding: 10px 32px;
+      letter-spacing: 3px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    .ov-btn:hover { background: #e8d88a; }
+    .ov-lore {
+      font-size: clamp(8px, 1.8vw, 9px);
+      color: #3a3a28;
+      letter-spacing: 1px;
+      text-align: center;
+      max-width: 320px;
+      line-height: 1.9;
+      padding: 0 12px;
+    }
+
+    #oath-flash {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Cinzel', serif;
+      font-size: clamp(12px, 3vw, 15px);
+      color: #c8b86a;
+      letter-spacing: 3px;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 20;
+      text-align: center;
+      text-shadow: 0 0 20px rgba(200,184,106,0.4);
+    }
+
+    #site-footer {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 14px;
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: #2a2a1a;
+      border-top: 1px solid #1a1a12;
+      margin-top: 0;
+    }
+    #site-footer a {
+      color: #3a3a28;
+      text-decoration: none;
+    }
+    #site-footer a:hover { color: #8a7a4a; }
+  </style>
+</head>
+<body>
+
+  <div id="site-header">
+    <span>THE 1969 · ETHEREUM · MONOCHROME</span>
+    <a href="https://the1969.io" target="_blank" rel="noopener">the1969.io ↗</a>
+  </div>
+
+  <div id="hud">
+    <div class="hud-stat">VAULT <span class="hud-val" id="hp-val">100</span>%</div>
+    <div class="hud-center">DEFEND THE TESTIMONIES</div>
+    <div class="hud-stat">SCORE <span class="hud-val" id="score-val">0</span></div>
+  </div>
+
+  <div id="game-wrap">
+    <canvas id="c" width="480" height="400"></canvas>
+
+    <div id="overlay">
+      <div class="ov-title">THE 1969</div>
+      <div class="ov-sub">VAULT DEFENDER · CHAPTER ZERO</div>
+      <div class="ov-lore">
+        The Vault burns tonight.<br>
+        1,969 testimonies hang in the balance.<br>
+        Move to aim · Click or tap to extinguish · Survive the watch.
+      </div>
+      <button class="ov-btn" id="startBtn">BEGIN THE WATCH ↗</button>
+      <div class="ov-lore" style="margin-top:8px">
+        THREE VERBS: TO WITNESS · TO REMEMBER · TO SEAL
+      </div>
+    </div>
+
+    <div id="oath-flash"></div>
+  </div>
+
+  <div id="site-footer">
+    <span>14.09.1977 · THE VAULT BURNS</span>
+    <a href="https://the1969.io" target="_blank" rel="noopener">@the1969</a>
+  </div>
+
+  <script>
+    const canvas  = document.getElementById('c');
+    const ctx     = canvas.getContext('2d');
+    const overlay = document.getElementById('overlay');
+    const hpVal   = document.getElementById('hp-val');
+    const scoreVal= document.getElementById('score-val');
+    const oathFlash = document.getElementById('oath-flash');
+
+    const W = 480, H = 400;
+    let gameRunning = false;
+    let score = 0, vaultHP = 100, wave = 0, frameCount = 0;
+    let embers = [], sparks = [], particles = [], testimonies = [];
+    let splashes = [];
+    let combo = 0, comboTimer = 0;
+    let cursor = { x: W / 2, y: H / 2 };
+
+    const OATHS = ['STRANGER','MONK','SOLDIER','REBEL','QUEEN','PROPHET','POET','BOI'];
+    const OATHLINES = [
+      'the one outside.',
+      'the one in stillness.',
+      'the one who keeps watch.',
+      'the one who refuses.',
+      'the one who decides.',
+      'the one who speaks.',
+      'the one who shapes.',
+      'the one who endures.'
+    ];
+    let nextOath = 0, oathCountdown = 300;
+
+    function rnd(a, b) { return a + Math.random() * (b - a); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function showOath(name, desc) {
+      oathFlash.innerHTML = name +
+        '<br><span style="font-size:10px;color:#8a7a4a;letter-spacing:2px">' + desc + '</span>';
+      oathFlash.style.opacity = '1';
+      oathFlash.style.transition = 'opacity 0s';
+      setTimeout(() => {
+        oathFlash.style.transition = 'opacity 1.5s';
+        oathFlash.style.opacity = '0';
+      }, 1800);
+    }
+
+    function spawnEmber() {
+      const side = Math.random() < 0.5 ? 'east' : 'south';
+      let x, y, tx, ty;
+      if (side === 'east') {
+        x = W + 10; y = rnd(60, H - 100); tx = rnd(180, 320); ty = rnd(60, H - 100);
+      } else {
+        x = rnd(60, 420); y = -10; tx = rnd(160, 320); ty = rnd(100, 300);
+      }
+      const speed = rnd(0.6 + wave * 0.08, 1.2 + wave * 0.1);
+      embers.push({ x, y, tx, ty, speed, t: 0, life: 1, r: rnd(3, 5 + wave * 0.5),
+        heat: rnd(0.7, 1), hit: false, glow: Math.random() < 0.15 });
+    }
+
+    function spawnTestimony() {
+      testimonies.push({
+        x: rnd(80, 400), y: rnd(80, H - 120), life: 1, age: 0, collected: false,
+        label: Math.floor(rnd(1, 1970)).toString().padStart(4, '0')
+      });
+    }
+
+    function getScaledPos(e, touch) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      const clientX = touch ? touch.clientX : e.clientX;
+      const clientY = touch ? touch.clientY : e.clientY;
+      return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+    }
+
+    function extinguish(ex, ey, r) {
+      let hit = false;
+      embers = embers.filter(e => {
+        if (e.hit) return false;
+        const dx = e.x - ex, dy = e.y - ey;
+        if (dx * dx + dy * dy < r * r) {
+          hit = true; e.hit = true;
+          for (let i = 0; i < 12; i++)
+            sparks.push({ x: e.x, y: e.y, vx: rnd(-3, 3), vy: rnd(-4, 1), life: 1, col: '#4a8aaa' });
+          for (let i = 0; i < 8; i++)
+            particles.push({ x: e.x, y: e.y, vx: rnd(-2, 2), vy: rnd(-3, 0.5),
+              life: 1, r: rnd(2, 4), col: '#c8b86a' });
+          return false;
+        }
+        return true;
+      });
+      if (hit) {
+        combo++; comboTimer = 120;
+        const pts = 10 * (combo >= 3 ? combo : 1);
+        score += pts;
+        splashes.push({ x: ex, y: ey, text: combo >= 3 ? 'x' + combo + ' ' + pts : '+' + pts,
+          life: 1, y0: ey, col: combo >= 3 ? '#c8b86a' : '#8aaa6a' });
+      } else {
+        combo = 0;
+      }
+      splashes.push({ x: ex, y: ey, text: '', life: 0.3, splash: true, r: 8, y0: ey });
+    }
+
+    function collectTestimony(x, y) {
+      testimonies = testimonies.filter(t => {
+        if (t.collected) return false;
+        const dx = t.x - x, dy = t.y - y;
+        if (dx * dx + dy * dy < 32 * 32) {
+          t.collected = true; score += 50;
+          splashes.push({ x: t.x, y: t.y, text: 'SEALED +50', life: 1, y0: t.y, col: '#c8e86a' });
+          return false;
+        }
+        return true;
+      });
+    }
+
+    canvas.addEventListener('mousemove', e => {
+      const p = getScaledPos(e, null); cursor.x = p.x; cursor.y = p.y;
+    });
+    canvas.addEventListener('click', e => {
+      if (!gameRunning) return;
+      extinguish(cursor.x, cursor.y, 36);
+      collectTestimony(cursor.x, cursor.y);
+    });
+    canvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const p = getScaledPos(e, e.touches[0]); cursor.x = p.x; cursor.y = p.y;
+    }, { passive: false });
+    canvas.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const p = getScaledPos(e, e.touches[0]); cursor.x = p.x; cursor.y = p.y;
+      if (!gameRunning) return;
+      extinguish(cursor.x, cursor.y, 36);
+      collectTestimony(cursor.x, cursor.y);
+    }, { passive: false });
+
+    document.getElementById('startBtn').addEventListener('click', startGame);
+
+    function startGame() {
+      overlay.style.display = 'none';
+      gameRunning = true;
+      score = 0; vaultHP = 100; wave = 0; frameCount = 0;
+      embers = []; sparks = []; particles = []; testimonies = []; splashes = [];
+      combo = 0; comboTimer = 0; nextOath = 0; oathCountdown = 300;
+      loop();
+    }
+
+    function endGame() {
+      gameRunning = false;
+      overlay.style.display = 'flex';
+      overlay.innerHTML = `
+        <div class="ov-title">THE VAULT BURNED</div>
+        <div class="ov-sub">14.09.1977 · 04:47 · THE EAST WALL</div>
+        <div class="ov-lore" style="margin-top:8px;color:#7a6a3a">
+          SCORE · <span style="color:#c8b86a;font-size:15px">${score}</span><br><br>
+          1,969 testimonies lost that morning.<br>None of them were rewritten.
+        </div>
+        <button class="ov-btn" id="restartBtn" style="margin-top:16px">WATCH AGAIN ↗</button>
+        <div class="ov-lore" style="margin-top:10px">
+          THE 1969 · ETHEREUM · MONOCHROME
+        </div>`;
+      document.getElementById('restartBtn').addEventListener('click', startGame);
+    }
+
+    /* ─── Draw helpers ─── */
+
+    function drawVault() {
+      const vx = W / 2 - 40, vy = H - 140, vw = 80, vh = 90;
+      ctx.fillStyle = '#1a1a12';
+      ctx.fillRect(vx - 10, vy + 20, vw + 20, vh - 20);
+      ctx.fillStyle = '#2a2a1a';
+      ctx.fillRect(vx, vy, vw, vh);
+      ctx.fillStyle = '#3a3a28';
+      ctx.fillRect(vx + 2, vy + 2, vw - 4, 8);
+      ctx.fillStyle = '#1a1a10';
+      ctx.fillRect(vx + 22, vy + 20, 36, 50);
+      ctx.strokeStyle = '#3a3a28'; ctx.lineWidth = 1;
+      ctx.strokeRect(vx + 22, vy + 20, 36, 50);
+      ctx.fillStyle = '#4a4a30';
+      ctx.fillRect(vx + 36, vy + 42, 8, 8);
+      ctx.fillStyle = '#0a0a08';
+      ctx.fillRect(vx - 4, vy - 20, 8, 25);
+      ctx.fillStyle = '#1a1a08';
+      ctx.fillRect(vx - 2, vy - 22, 4, 4);
+      const pct = vaultHP / 100;
+      const r = pct > 0.5 ? 80 : 150 + 100 * (1 - pct / 0.5);
+      const g = pct > 0.5 ? 80 + vaultHP : vaultHP * 2;
+      ctx.fillStyle = 'rgba(10,10,8,0.5)';
+      ctx.fillRect(vx, vy + vh + 8, vw, 4);
+      ctx.fillStyle = `rgba(${Math.round(r)},${Math.round(g)},40,1)`;
+      ctx.fillRect(vx, vy + vh + 8, vw * pct, 4);
+      if (vaultHP < 40) {
+        const f = Math.sin(frameCount * 0.3) * 0.5 + 0.5;
+        ctx.fillStyle = `rgba(180,80,20,${0.15 * f})`;
+        ctx.fillRect(vx, vy, vw, vh);
+      }
+    }
+
+    function drawEmbers() {
+      embers.forEach(e => {
+        const px = lerp(e.x, e.tx, Math.min(e.t, 1));
+        const py = lerp(e.y, e.ty, Math.min(e.t, 1));
+        e.x = px; e.y = py;
+        const pulse = Math.sin(frameCount * 0.2 + e.r) * 0.15 + 0.85;
+        const h = e.heat;
+        ctx.save();
+        if (e.glow) { ctx.shadowBlur = 8; ctx.shadowColor = 'rgba(220,80,20,0.4)'; }
+        ctx.fillStyle = `rgba(${Math.round(220*h)},${Math.round(60*h)},${Math.round(10*h)},${e.life * 0.9})`;
+        ctx.beginPath(); ctx.arc(px, py, e.r * pulse, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = `rgba(255,${Math.round(160*h)},${Math.round(40*h)},${e.life * 0.7})`;
+        ctx.beginPath(); ctx.arc(px - e.r * 0.2, py - e.r * 0.2, e.r * 0.5 * pulse, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    function drawSparks() {
+      sparks.forEach(s => {
+        ctx.fillStyle = `rgba(80,140,200,${s.life * 0.9})`;
+        ctx.fillRect(s.x, s.y, 2, 2);
+        s.x += s.vx; s.y += s.vy; s.vy += 0.1; s.life -= 0.06;
+      });
+      sparks = sparks.filter(s => s.life > 0);
+      particles.forEach(p => {
+        const alpha = p.life * 0.8;
+        ctx.fillStyle = p.col + Math.round(alpha * 255).toString(16).padStart(2,'0');
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2); ctx.fill();
+        p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.life -= 0.05;
+      });
+      particles = particles.filter(p => p.life > 0);
+    }
+
+    function drawTestimonies() {
+      testimonies.forEach(t => {
+        t.age++;
+        const bob = Math.sin(t.age * 0.05) * 3;
+        const fade = Math.min(t.age / 30, 1);
+        ctx.globalAlpha = fade * 0.85;
+        ctx.fillStyle = '#c8b86a';
+        ctx.fillRect(t.x - 8, t.y + bob - 10, 16, 12);
+        ctx.fillStyle = '#0a0a08';
+        ctx.fillRect(t.x - 6, t.y + bob - 8, 12, 8);
+        ctx.fillStyle = '#2a2a1a';
+        for (let i = 0; i < 3; i++) ctx.fillRect(t.x - 4, t.y + bob - 6 + i * 2, 8, 1);
+        ctx.font = '7px Share Tech Mono'; ctx.fillStyle = '#8a7a3a'; ctx.textAlign = 'center';
+        ctx.fillText(t.label, t.x, t.y + bob + 8);
+        ctx.globalAlpha = 1;
+        const ring = Math.sin(t.age * 0.1) * 2;
+        ctx.strokeStyle = 'rgba(200,184,106,0.2)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(t.x, t.y + bob, 14 + ring, 0, Math.PI * 2); ctx.stroke();
+      });
+    }
+
+    function drawSplashes() {
+      splashes.forEach(s => {
+        if (s.splash) {
+          ctx.strokeStyle = `rgba(80,140,200,${s.life * 0.4})`; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r * (1 - s.life) * 3, 0, Math.PI * 2); ctx.stroke();
+          s.r += 1; s.life -= 0.15;
+          return;
+        }
+        ctx.globalAlpha = s.life;
+        ctx.font = 'bold 11px Share Tech Mono';
+        ctx.fillStyle = s.col; ctx.textAlign = 'center';
+        ctx.fillText(s.text, s.x, s.y - (1 - s.life) * 30);
+        ctx.globalAlpha = 1;
+        s.y -= 0.5; s.life -= 0.025;
+      });
+      splashes = splashes.filter(s => s.life > 0);
+    }
+
+    function drawCursor() {
+      const x = cursor.x, y = cursor.y;
+      ctx.strokeStyle = 'rgba(200,184,106,0.8)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x - 12, y); ctx.lineTo(x - 4, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + 4, y); ctx.lineTo(x + 12, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y - 12); ctx.lineTo(x, y - 4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y + 4); ctx.lineTo(x, y + 12); ctx.stroke();
+      ctx.strokeStyle = 'rgba(200,184,106,0.3)'; ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.stroke();
+      if (embers.length > 0) {
+        let nearestDist = 9999;
+        embers.forEach(e => {
+          const d = Math.hypot(e.x - x, e.y - y);
+          if (d < nearestDist) nearestDist = d;
+        });
+        if (nearestDist < 60) {
+          const intensity = 1 - (nearestDist / 60);
+          ctx.strokeStyle = `rgba(220,80,20,${intensity * 0.6})`; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(x, y, 36, 0, Math.PI * 2); ctx.stroke();
+        }
+      }
+    }
+
+    function drawBg() {
+      ctx.fillStyle = '#0a0a08'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#0e0e0a'; ctx.fillRect(0, H - 80, W, 80);
+      ctx.strokeStyle = '#1a1a12'; ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(0, H - 80); ctx.lineTo(W, H - 80); ctx.stroke();
+      ctx.font = '8px Share Tech Mono'; ctx.fillStyle = 'rgba(50,50,35,0.4)'; ctx.textAlign = 'left';
+      ctx.fillText('14.09.1977 · VAULT GROUNDS · WAVE ' + String(wave + 1).padStart(2, '0'), 8, H - 6);
+      ctx.textAlign = 'right';
+      ctx.fillText(embers.length + ' EMBERS INBOUND', W - 8, H - 6);
+    }
+
+    function drawHeatveil() {
+      if (embers.length > 3) {
+        const intensity = Math.min(embers.length / 15, 1) * 0.12;
+        ctx.fillStyle = `rgba(180,60,10,${intensity})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+    }
+
+    function drawCombo() {
+      if (combo >= 2 && comboTimer > 0) {
+        ctx.globalAlpha = Math.min(comboTimer / 60, 1);
+        ctx.font = 'bold 12px Share Tech Mono'; ctx.fillStyle = '#c8b86a'; ctx.textAlign = 'right';
+        ctx.fillText('COMBO x' + combo, W - 12, 26);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function update() {
+      frameCount++;
+      if (comboTimer > 0) comboTimer--; else if (combo > 0) combo = 0;
+      wave = Math.floor(score / 200);
+      const spawnRate = Math.max(50 - wave * 4, 12);
+      if (frameCount % spawnRate === 0) spawnEmber();
+      if (frameCount % 280 === 0 && testimonies.length < 4) spawnTestimony();
+      oathCountdown--;
+      if (oathCountdown <= 0) {
+        const idx = nextOath % 8;
+        showOath(OATHS[idx], OATHLINES[idx]);
+        nextOath++; oathCountdown = 600 + rnd(0, 400);
+      }
+      embers.forEach(e => {
+        e.t += e.speed * 0.008;
+        if (e.t >= 1) {
+          const dx = e.x - W / 2, dy = e.y - (H / 2 - 30);
+          const distToVault = Math.hypot(dx, dy);
+          if (distToVault < 60) {
+            vaultHP = Math.max(0, vaultHP - rnd(3 + wave * 0.5, 7 + wave));
+          } else {
+            vaultHP = Math.max(0, vaultHP - rnd(1, 3));
+          }
+          for (let i = 0; i < 6; i++)
+            sparks.push({ x: e.x, y: e.y, vx: rnd(-2, 2), vy: rnd(-3, 0.5), life: 1, col: '#aa5020' });
+          e.hit = true;
+        }
+      });
+      embers = embers.filter(e => !e.hit);
+      hpVal.textContent = Math.ceil(vaultHP);
+      scoreVal.textContent = score;
+      if (vaultHP <= 0) endGame();
+    }
+
+    function loop() {
+      if (!gameRunning) return;
+      ctx.clearRect(0, 0, W, H);
+      drawBg(); drawHeatveil();
+      drawTestimonies(); drawVault(); drawEmbers(); drawSparks();
+      drawSplashes(); drawCombo(); drawCursor();
+      update();
+      requestAnimationFrame(loop);
+    }
+  </script>
+</body>
+</html>
